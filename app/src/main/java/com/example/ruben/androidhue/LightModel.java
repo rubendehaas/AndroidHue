@@ -5,11 +5,20 @@ package com.example.ruben.androidhue;
  */
 public class LightModel {
 
+    public Integer id;
     public String name;
     public String stateOn;
     public String stateBrightness;
     public String stateHue;
     public String stateSaturation;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
     public String getName() {
         return name;

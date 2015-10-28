@@ -1,5 +1,6 @@
 package com.example.ruben.androidhue;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -34,26 +35,25 @@ public class LightTask extends AsyncTask<String, Void, String> {
     private static final String TAG = "LightTask";
     private static final String urlString = "http://192.168.1.179/api/626b39467d5a4f110a85bc2f0843b7/lights/";
 
-    // Constructor, set listener
-    public LightTask() {
+    private newLightsAvailable listener = null;
 
+    public LightTask(newLightsAvailable listener) {
+        this.listener = listener;
     }
 
     @Override
     protected String doInBackground(String... params) {
 
         InputStream inputStream = null;
-        int responsCode = -1;
-
+        int responseCode = -1;
         String response = "";
-
 
         try {
             URL url = new URL(urlString);
             URLConnection urlConnection = url.openConnection();
 
             if (!(urlConnection instanceof HttpURLConnection)) {
-                // Url
+
                 return null;
             }
 
@@ -63,9 +63,9 @@ public class LightTask extends AsyncTask<String, Void, String> {
             httpConnection.setRequestMethod("GET");
             httpConnection.connect();
 
-            responsCode = httpConnection.getResponseCode();
+            responseCode = httpConnection.getResponseCode();
 
-            if (responsCode == HttpURLConnection.HTTP_OK) {
+            if (responseCode == HttpURLConnection.HTTP_OK) {
                 inputStream = httpConnection.getInputStream();
                 response = getStringFromInputStream(inputStream);
             }
@@ -95,16 +95,21 @@ public class LightTask extends AsyncTask<String, Void, String> {
 
             while (x.hasNext()){
                 String key = (String) x.next();
-                jsonArray.put(jsonObjects.get(key));
+                jsonArray.put(jsonObjects.getJSONObject(key).put("key",key));
             }
 
             for(int idx = 0; idx < jsonArray.length(); idx++) {
+
+                JSONArray bla = jsonArray;
+
 
                 JSONObject light = jsonArray.getJSONObject(idx);
                 JSONObject state = light.getJSONObject("state");
 
                 LightModel l = new LightModel();
 
+                l.id = light.getInt("key");
+                l.name = light.getString("name");
                 l.stateOn = state.getString("on");
                 l.stateBrightness = state.getString("bri");
 
@@ -116,7 +121,9 @@ public class LightTask extends AsyncTask<String, Void, String> {
                     l.stateSaturation = state.getString("sat");
                 }
 
+                listener.processFinished(l);
             }
+
         } catch( JSONException ex) {
             Log.e("ERROR_"+TAG, ex.getLocalizedMessage());
         }
@@ -149,13 +156,24 @@ public class LightTask extends AsyncTask<String, Void, String> {
 
         return sb.toString();
     }
+
+    public interface newLightsAvailable {
+        void processFinished(LightModel output);
+    }
 }
 
 class LightPostTask extends AsyncTask<Void,Void,Void>{
 
-    HttpURLConnection client;
-    URL url;
-    JSONObject response = new JSONObject();
+    private HttpURLConnection client;
+    private URL url;
+    private JSONObject response = new JSONObject();
+    private LightModel lightModel;
+    private Boolean lightStateOn;
+
+    public LightPostTask(LightModel l, boolean b){
+        lightModel = l;
+        lightStateOn = b;
+    }
 
     @Override
     protected Void doInBackground(Void... voids) {
@@ -164,8 +182,9 @@ class LightPostTask extends AsyncTask<Void,Void,Void>{
         HttpURLConnection urlConn;
 
         try {
+
             JSONObject jsonParam = new JSONObject();
-            url = new URL("http://192.168.1.179/api/626b39467d5a4f110a85bc2f0843b7/lights/1/state");
+            url = new URL("http://192.168.1.179/api/626b39467d5a4f110a85bc2f0843b7/lights/"+lightModel.id.toString()+"/state");
 
             urlConn = (HttpURLConnection)url.openConnection();
             urlConn.setDoInput(true);
@@ -175,7 +194,7 @@ class LightPostTask extends AsyncTask<Void,Void,Void>{
             urlConn.setRequestProperty("Content-Type", "application/json");
             urlConn.setRequestProperty("Accept", "application/json");
 
-            jsonParam.put("on",false);
+            jsonParam.put("on",lightStateOn);
 
             OutputStream os = new BufferedOutputStream(urlConn.getOutputStream());
             os.write(jsonParam.toString().getBytes("UTF-8"));
@@ -184,19 +203,14 @@ class LightPostTask extends AsyncTask<Void,Void,Void>{
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(urlConn.getInputStream()));
             String inputLine;
-            StringBuffer response = new StringBuffer();
+            StringBuilder response = new StringBuilder();
 
             while ((inputLine = in.readLine()) != null) {
                 response.append(inputLine);
             }
             in.close();
 
-            //print result
-            Log.i("OUTPUT_PUT ",response.toString());
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (JSONException e) {
+        } catch (IOException | JSONException e) {
             e.printStackTrace();
         }
 
