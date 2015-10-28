@@ -10,6 +10,8 @@
         android:id="@+id/switch1"
         android:layout_gravity="right"
         android:enabled="true"
-        android:checked="false" />
+        android:checked="false"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp" />
 
 </LinearLayout>
