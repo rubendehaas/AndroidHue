@@ -1,9 +1,13 @@
 package com.example.ruben.androidhue;
 
+import android.os.Parcelable;
+
+import java.io.Serializable;
+
 /**
  * Created by Ruben on 27/10/2015.
  */
-public class LightModel {
+public class LightModel implements Serializable{
 
     public Integer id;
     public String name;

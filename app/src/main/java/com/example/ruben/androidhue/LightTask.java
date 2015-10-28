@@ -89,7 +89,7 @@ public class LightTask extends AsyncTask<String, Void, String> {
 
             while (x.hasNext()){
                 String key = (String) x.next();
-                jsonArray.put(jsonObjects.getJSONObject(key).put("key",key));
+                jsonArray.put(jsonObjects.getJSONObject(key).put("key", key));
             }
 
             for(int idx = 0; idx < jsonArray.length(); idx++) {
@@ -162,11 +162,9 @@ class LightPostTask extends AsyncTask<Void,Void,Void>{
     private URL url;
     private JSONObject response = new JSONObject();
     private LightModel lightModel;
-    private Boolean lightStateOn;
 
-    public LightPostTask(LightModel l, boolean b){
+    public LightPostTask(LightModel l){
         lightModel = l;
-        lightStateOn = b;
     }
 
     @Override
@@ -188,7 +186,13 @@ class LightPostTask extends AsyncTask<Void,Void,Void>{
             urlConn.setRequestProperty("Content-Type", "application/json");
             urlConn.setRequestProperty("Accept", "application/json");
 
-            jsonParam.put("on",lightStateOn);
+            jsonParam.put("on", Boolean.parseBoolean(lightModel.stateOn));
+            jsonParam.put("bri",Integer.parseInt(lightModel.stateBrightness));
+
+            if(lightModel.stateSaturation != null && lightModel.stateHue != null) {
+                jsonParam.put("sat", Integer.parseInt(lightModel.stateSaturation));
+                jsonParam.put("hue", Integer.parseInt(lightModel.stateHue));
+            }
 
             OutputStream os = new BufferedOutputStream(urlConn.getOutputStream());
             os.write(jsonParam.toString().getBytes("UTF-8"));
