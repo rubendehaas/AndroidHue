@@ -1,12 +1,10 @@
 package com.example.ruben.androidhue;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.CompoundButton;
 import android.widget.Switch;
 
 import java.util.ArrayList;
@@ -67,6 +65,7 @@ public class LightAdapter extends BaseAdapter {
 
         Switch lightSwitch = (Switch) view.findViewById(R.id.switch1);
         lightSwitch.setOnCheckedChangeListener(new LightListener(light));
+        lightSwitch.setOnLongClickListener(new LightListener(light, _context));
 
         return view;
     }
